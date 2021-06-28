@@ -1,0 +1,10 @@
+FROM golang:1.16.5 as build
+COPY ./ /src
+RUN cd /src/; go build .
+
+FROM alpine:3.14
+RUN apk --no-cache add git
+COPY --from=build /src/gitdiff2fly /opt/app/
+WORKDIR /work
+ENTRYPOINT [ "/opt/app/gitdiff2fly" ]
+CMD ["--help"]
