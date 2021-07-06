@@ -28,7 +28,7 @@ Cтоит отметить, что приоритетность выполнен
 | Добавлении, удалении, модификации для сущностей текущей миграции - ALTER | DDL_AL                   | .SQL             | 2         |
 | Процедуры, триггеры, функции                                 | Без префикса             | .SQL             | 3         |
 | Манипуляции с данными - INSERT, UPDATE, DELETE и т.д.        | DML_                     | .SQL, .JAVA      | 4         |
-| Удаление таблицы - DROP                                      | DDL_DR                   | .SQL             | 5         |
+| Десктруктивные действия (удаление таблиц, процедур, полей) - DROP | DDL_DR                   | .SQL             | 5         |
 
 ## Работа с GitDiff2Fly
 
@@ -37,8 +37,6 @@ Cтоит отметить, что приоритетность выполнен
 Создадим репозитории для работы с **gitdiff2fly**. 
 
 Для этого нужно выполнить следующие действия:
-
-Для этого нужно выполнить несколько действий:
 
 |  №   | Описание                                                     |                           Действие                           |
 | :--: | :----------------------------------------------------------- | :----------------------------------------------------------: |
@@ -80,7 +78,7 @@ cd test_repo
 В GitDiff2Fly перед запуском можно посмотреть список аргументов, с которыми умеет работать программа, для этого нужно вызвать следующую команду:
 
 ```bash
-exzentt@MacBook-Air-Exzentt test_repo % ./gitdiff2fly -help        
+$> ./gitdiff2fly -help        
 
 GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
 
@@ -103,7 +101,7 @@ GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
 Пробуем вызвать **gitdiff2fly** и получаем ответ, что последний коммит соответствует последнему коммиту, записанному в файл last_commit, поэтому программа ничего не делает и пропускает выполнение.
 
 ```bash
-exzentt@MacBook-Air-Exzentt test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2  
+test_repo $> ./gitdiff2fly -flyway-repo-path=../tmp_test2  
 
 GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
 
@@ -119,8 +117,9 @@ current commit already in flyway repository. skipped
 
 Давайте закоммитим наш результат:
 
-```
-exzentt@MacBook-Air-Exzentt test_repo % git commit -m 'test commit repo'            
+```bash
+test_repo $> git commit -m 'test commit repo' 
+           
 [main d3295e7] test commit repo
  6 files changed, 10 insertions(+)
  create mode 100644 1_deps.txt
@@ -139,8 +138,9 @@ exzentt@MacBook-Air-Exzentt test_repo % git commit -m 'test commit repo'
 
 Сначала программа сравнила последний коммит в репозитории с последним коммитом в файле last_commit. Увидела, что коммиты не совпадают и приступила к маркировке файлов по приоритетности. Файл file_ignore.txt не попал в snapshot, как было и задумано логикой. 
 
- > ```
- > exzentt@MacBook-Air-Exzentt test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2
+ > ```bash
+ > test_repo $> ./gitdiff2fly -flyway-repo-path=../tmp_test2
+ > 
  > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
  > 
  > => analyze current repository
@@ -172,8 +172,9 @@ exzentt@MacBook-Air-Exzentt test_repo % git commit -m 'test commit repo'
 
 Попробуем теперь указать версию для миграции и посмотрим на результат. 
 
-```
-exzentt@MacBook-Air-Exzentt test_repo % ./gitdiff2fly -next-version=1.4 -flyway-repo-path=../tmp_test2
+```bash
+test_repo $> ./gitdiff2fly -next-version=1.4 -flyway-repo-path=../tmp_test2
+
 GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
 
 => analyze current repository
