@@ -294,7 +294,7 @@ func mkDirIfNotExist(dirName string) {
 	if _, err := os.Stat(dirName); err == nil {
 		return
 	}
-	if err := os.Mkdir(dirName, 0755); err != nil {
+	if err := os.MkdirAll(dirName, 0755); err != nil {
 		panic(err)
 	}
 }
