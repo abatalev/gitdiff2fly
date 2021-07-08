@@ -90,7 +90,7 @@ func (git Git) getLastRelease(curr, fileName string) (string, bool) {
 func (git Git) getCurrentVersion() string {
 	curr, err := git.cmd.command(".", "git", "rev-parse", "HEAD")
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		log.Fatalf("cmd.Run() failed with %s, error text: %s\n", err, curr)
 	}
 	return curr
 }
