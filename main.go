@@ -43,7 +43,8 @@ func checkDdl(normName string, file *FileInfo) *FileInfo {
 }
 
 func checkFile(file *FileInfo) *FileInfo {
-	normName := strings.ToUpper(file.fileName)
+	_, shortFileName := filepath.Split(file.fileName)
+	normName := strings.ToUpper(shortFileName)
 
 	if file.mode == "D" {
 		fmt.Println(" > skip", file.fileName)
