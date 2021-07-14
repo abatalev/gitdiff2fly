@@ -210,6 +210,9 @@ func TestCheckFile(t *testing.T) {
 		}, {
 			srcFile: FileInfo{fileName: "/tmp/a/dml_1.sql", mode: "A"},
 			dstFile: FileInfo{priority: 4},
+		}, {
+			srcFile: FileInfo{fileName: "/tmp/a/dml_1.sql  /tmp/a/lib/dml_1.sql", mode: "R100"},
+			dstFile: FileInfo{priority: -2},
 		},
 	}
 	assertions := require.New(t)

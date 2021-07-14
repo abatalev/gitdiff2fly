@@ -46,7 +46,7 @@ func checkFile(file *FileInfo) *FileInfo {
 	_, shortFileName := filepath.Split(file.fileName)
 	normName := strings.ToUpper(shortFileName)
 
-	if file.mode == "D" {
+	if file.mode == "D" || strings.HasPrefix(file.mode, "R") {
 		fmt.Println(" > skip", file.fileName)
 		file.priority = -2
 		file.unloaded = true
