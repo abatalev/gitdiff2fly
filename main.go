@@ -12,12 +12,13 @@ import (
 )
 
 type FileInfo struct {
-	unloaded bool
-	priority int
-	mode     string
-	fileName string
-	after    []int
-	before   []int
+	unloaded       bool
+	priority       int
+	mode           string
+	fileName       string
+	targetFileName string
+	after          []int
+	before         []int
 }
 
 func checkDdl(normName string, file *FileInfo) *FileInfo {
@@ -83,6 +84,22 @@ func checkFile(file *FileInfo) *FileInfo {
 	return file
 }
 
+func replace(files []FileInfo, from, to string) {
+	for i, f := range files {
+		if f.mode != "R100" && f.fileName == from {
+			files[i].fileName = to
+		}
+	}
+}
+
+func transform(files []FileInfo) {
+	for _, f := range files {
+		if f.mode == "R100" && f.priority == -2 {
+			replace(files, f.fileName, f.targetFileName)
+		}
+	}
+}
+
 func markFiles(arr []string) []FileInfo {
 	fmt.Println("=> mark files")
 	files := make([]FileInfo, 0)
@@ -91,8 +108,14 @@ func markFiles(arr []string) []FileInfo {
 			continue
 		}
 		p := strings.Split(s, "\t")
-		files = append(files, *checkFile(&FileInfo{mode: p[0], fileName: p[1], priority: -1}))
+		if len(p) == 2 {
+			files = append(files, *checkFile(&FileInfo{mode: p[0], fileName: p[1], priority: -1}))
+		} else {
+			files = append(files, *checkFile(&FileInfo{mode: p[0], fileName: p[1], targetFileName: p[2], priority: -1}))
+		}
 	}
+
+	transform(files)
 
 	sort.Slice(files, func(i, j int) bool {
 		if files[i].priority == files[j].priority {

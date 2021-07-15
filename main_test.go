@@ -76,6 +76,30 @@ func TestCreateBuildEmpty(t *testing.T) {
 	assertions.False(createBuild([]FileInfo{*checkFile(&file)}, "/tmp", "1", &FakeSystem{}))
 }
 
+func TestTransform(t *testing.T) {
+	data := []struct {
+		name        string
+		files       []FileInfo
+		checkedPos  int
+		checkedName string
+	}{
+		{
+			name: "simple",
+			files: []FileInfo{
+				{fileName: "ddl_cr_a.sql", unloaded: false, priority: 1, mode: "A"},
+				{fileName: "ddl_cr_a.sql", targetFileName: "lib/ddl_cr_a.sql", unloaded: false, priority: -2, mode: "R100"},
+			},
+			checkedPos:  0,
+			checkedName: "lib/ddl_cr_a.sql",
+		},
+	}
+	assertions := require.New(t)
+	for _, d := range data {
+		transform(d.files)
+		assertions.Equal(d.checkedName, d.files[d.checkedPos].fileName, d.name)
+	}
+}
+
 func TestCalcSequence(t *testing.T) {
 	data := []struct {
 		name  string
