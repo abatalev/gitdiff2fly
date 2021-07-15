@@ -14,6 +14,7 @@ func gitFile(mode, name string) string {
 }
 
 func TestMarkFiles(t *testing.T) {
+	initMasks(true)
 	assertions := require.New(t)
 
 	names := []string{gitFile("A", "ddl_cr_3.sql"), gitFile("A", "ddl_cr_2.sql"),
@@ -202,7 +203,16 @@ func TestParseDepLines(t *testing.T) {
 	}
 }
 
+func TestMatch(t *testing.T) {
+	assertions := require.New(t)
+
+	assertions.True(match(`^DDL\_CR.*\.SQL$`, "DDL_CR_A.SQL"))
+	assertions.True(match(`^DDL\_CR.*\.SQL$`, "DDL_CREATE_TABLE_A.SQL"))
+	assertions.False(match(`^DDL\_CR.*\.SQL$`, "DDLXCR_A.SQL"))
+}
+
 func TestCheckFile(t *testing.T) {
+	initMasks(true)
 	data := []struct {
 		srcFile FileInfo
 		dstFile FileInfo
@@ -381,5 +391,14 @@ func TestRun(t *testing.T) {
 			FakeGit{isFirst: data.isFirst, lastRelease: data.lastRelease, diffFiles: data.diffFiles},
 			&FakeSystem{}),
 			"variant %d", i)
+	}
+}
+
+func TestReadConfig(t *testing.T) {
+	data := []string{".gitdiff2fly.yaml", "config.yaml"}
+	for i, r := range data {
+		cfg := readConfig(r)
+		assertions := require.New(t)
+		assertions.True(cfg.UseDefaultMasks, i)
 	}
 }

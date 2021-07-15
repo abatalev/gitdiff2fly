@@ -3,12 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type FileInfo struct {
@@ -21,26 +26,17 @@ type FileInfo struct {
 	before         []int
 }
 
-func checkDdl(normName string, file *FileInfo) *FileInfo {
-	if strings.HasPrefix(normName, "DDL_CR") &&
-		strings.HasSuffix(normName, ".SQL") &&
-		file.mode == "A" {
-		file.priority = 1
-		return file
-	}
-	if strings.HasPrefix(normName, "DDL_AL") &&
-		strings.HasSuffix(normName, ".SQL") &&
-		file.mode == "A" {
-		file.priority = 2
-		return file
-	}
-	if strings.HasPrefix(normName, "DDL_DR") &&
-		strings.HasSuffix(normName, ".SQL") &&
-		file.mode == "A" {
-		file.priority = 5
-		return file
-	}
-	return nil
+type MaskPriority struct {
+	Mask     string `yaml:"mask"`
+	Mode     string `yaml:"mode"`
+	Priority int    `yaml:"priority"`
+}
+
+var masks []MaskPriority
+
+func match(mask, s string) bool {
+	matched, _ := regexp.MatchString(mask, s)
+	return matched
 }
 
 func checkFile(file *FileInfo) *FileInfo {
@@ -54,26 +50,21 @@ func checkFile(file *FileInfo) *FileInfo {
 		return file
 	}
 
-	if strings.HasSuffix(normName, "_DEPS.TXT") {
+	if match(`^.*\_DEPS\.TXT$`, normName) {
 		fmt.Println(" > found dependencies file", file.fileName)
 		file.priority = -3
 		file.unloaded = true
 		return file
 	}
 
-	vRes := checkDdl(normName, file)
-	if vRes != nil {
-		return vRes
+	for _, m := range masks {
+		if match(m.Mask, normName) && file.mode == m.Mode {
+			file.priority = m.Priority
+			return file
+		}
 	}
 
-	if strings.HasPrefix(normName, "DML_") &&
-		(strings.HasSuffix(normName, ".SQL") || strings.HasSuffix(normName, ".JAVA")) &&
-		file.mode == "A" {
-		file.priority = 4
-		return file
-	}
-
-	if strings.HasSuffix(normName, ".SQL") {
+	if match(`^.*\.SQL$`, normName) {
 		file.priority = 3
 		return file
 	}
@@ -388,6 +379,44 @@ func parse(argVersion string, t time.Time) parsedArguments {
 	}
 }
 
+func initMasks(useDefaultMasks bool) {
+	masks = make([]MaskPriority, 0)
+	if useDefaultMasks {
+		fmt.Println(" > use defaults masks")
+		masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
+		masks = append(masks, MaskPriority{Mask: `^DDL\_AL.*\.SQL$`, Mode: "A", Priority: 2})
+		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.SQL$`, Mode: "A", Priority: 4})
+		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.JAVA$`, Mode: "A", Priority: 4})
+		masks = append(masks, MaskPriority{Mask: `^DDL\_DR.*\.SQL$`, Mode: "A", Priority: 5})
+	}
+}
+
+type conf struct {
+	UseDefaultMasks bool           `yaml:"useDefaultMasks"`
+	Masks           []MaskPriority `yaml:"masks"`
+}
+
+func (c *conf) getConf(cfgFileName string) *conf {
+	yamlFile, err := ioutil.ReadFile(cfgFileName)
+	if err != nil {
+		log.Printf(" > error read   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf(" > error unmarshal: %v", err)
+	}
+	return c
+}
+
+func readConfig(cfgFileName string) *conf {
+	cfg := conf{UseDefaultMasks: true, Masks: nil}
+	if _, err := os.Stat(cfgFileName); os.IsNotExist(err) {
+		fmt.Printf(" > file '%s' not found\n", cfgFileName)
+		return &cfg
+	}
+	return cfg.getConf(cfgFileName)
+}
+
 func main() {
 	fmt.Printf("GitDiff2Fly (C) Copyright 2021 by Andrey Batalev\n")
 
@@ -405,6 +434,16 @@ func main() {
 	}
 
 	fmt.Println()
+
+	fmt.Println("=> read config")
+	cfg := readConfig(".gitdiff2fly.yaml")
+
+	initMasks(cfg.UseDefaultMasks)
+	if len(cfg.Masks) > 0 {
+		fmt.Println(" > added masks from config")
+		masks = append(masks, cfg.Masks...)
+	}
+
 	os.Exit(
 		run(*args.argVersion, *args.flyRepoPath,
 			Git{io: RealIO{}, cmd: &OsCmd{}}, &OsSystem{}))

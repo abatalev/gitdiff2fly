@@ -13,7 +13,7 @@ go build .
 ## build docker images
 
 ```
-docker build -f Dockerfile.gitdiff2fly -t abatalev/gitdiff2fly:1.0 .
+docker build -f Dockerfile.gitdiff2fly -t abatalev/gitdiff2fly:1.2 .
 docker build -f Dockerfile.flyway -t abatalev/flyway:7.10.0
 ```
 
