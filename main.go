@@ -58,7 +58,7 @@ func checkFile(file *FileInfo) *FileInfo {
 	}
 
 	for _, m := range masks {
-		if match(m.Mask, normName) && file.mode == m.Mode {
+		if match(m.Mask, normName) && match(m.Mode, file.mode) {
 			file.priority = m.Priority
 			return file
 		}

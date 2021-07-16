@@ -211,6 +211,30 @@ func TestMatch(t *testing.T) {
 	assertions.False(match(`^DDL\_CR.*\.SQL$`, "DDLXCR_A.SQL"))
 }
 
+func TestCheckFileWithMode(t *testing.T) {
+	masks = make([]MaskPriority, 0)
+	masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
+	masks = append(masks, MaskPriority{Mask: `^.*\.PKG$`, Mode: ".*", Priority: -100})
+	data := []struct {
+		srcFile FileInfo
+		dstFile FileInfo
+	}{
+		{
+			srcFile: FileInfo{fileName: "ddl_cr_a.sql", mode: "A"},
+			dstFile: FileInfo{priority: 1},
+		},
+		{
+			srcFile: FileInfo{fileName: "a.pkg", mode: "M"},
+			dstFile: FileInfo{priority: -100},
+		},
+	}
+	assertions := require.New(t)
+	for _, row := range data {
+		o := checkFile(&row.srcFile)
+		assertions.Equal(o.priority, row.dstFile.priority)
+	}
+}
+
 func TestCheckFile(t *testing.T) {
 	initMasks(true)
 	data := []struct {
