@@ -226,6 +226,10 @@ execute git [push --tags origin master]
 
 ![image-20210704222923512](img/all_branches_with_commits.png)
 
+
+
+**Использование файла *_deps.txt**
+
 Стоит отметить, что если мы хотим поменять приоритет, то мы можем создать файл **1_deps.txt** и указать зависимости через пробел. Например мы создали два файла **1.sql, 2.sql** и хотим изменить порядок миграции так, чтобы первым был 2.sql. Для этого мы прописываем в файл **1__deps.txt**  следующую строку, **тем самым указывая, что 1.sql зависит от 2.sql**
 
 ```bash
@@ -237,3 +241,94 @@ execute git [push --tags origin master]
 Запускаем **gitdiff2flyway** и видим следующий результат.
 
 ![image-20210708180340707](img/deps.png)
+
+## Работа с масками
+
+Для работы с масками в **gitdiff2fly** можно использовать конфигурацию в формате YAML. Наименования файла должно быть следующим: **.gitdiff2fly.yaml**, сам файл должен иметь следующую архитектуру:
+
+|    Параметр     |   Тип данных   |     YAML   структура     | Возможные значение |                           Значение                           |
+| :-------------: | :------------: | :----------------------: | :----------------: | :----------------------------------------------------------: |
+| useDefaultMasks |      Bool      | `yaml:"useDefaultMasks"` |    true, false     | Флаг для использование дефолтных параметров, что описаны раннее |
+|      masks      | []MaskPriority |      `yaml:"masks"`      |        List        |                     Массив с параметрами                     |
+
+MaskPriority имеет следующую архитектуру:
+
+| Параметр | Тип данных | YAML   структура  | Возможные значение |               Значение               |
+| :------: | :--------: | :---------------: | :----------------: | :----------------------------------: |
+|   Mask   |   String   |   `yaml:"mask"`   |        PKG         | Маска для определения названия файла |
+|   Mode   |   String   |   `yaml:"mode"`   |         A          |    Информация о действие с файлом    |
+| Priority |  Integer   | `yaml:"priority"` |         1          |              Приоритет               |
+
+Пример:
+
+```yaml
+useDefaultMasks: true
+masks:
+  - mask: "PKG"
+    mode: "A"
+    priority: 2
+  - mask: "PKS"
+    mode: "A"
+    priority: 3
+```
+
+Допустим, мы хотим ввести маски для файлов с суффиксом .PKG, .PKS. Для этого добавим конфиг **.gitdiff2fly.yaml** в наш репозиторий и несколько файлов (**коммит test config**):
+
+![image-20210719164016632](img/commit_with_yml_configuration.png)
+
+В нашей конфигурации укажем приоритеты для файлов:
+
+```yaml
+useDefaultMasks: true
+masks:
+  - mask: "/*.PKG"
+    mode: "A"
+    priority: 1
+  - mask: "/*.PKS"
+    mode: "A"
+    priority: 2
+```
+
+Попробуем запустить gitdiff2fly и посмотреть на результат:
+
+ > ```bash
+ >  > test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2
+ >  > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
+ > 
+ > => read config
+ > 
+ >  > use defaults masks
+ >  > added masks from config
+ >  > => analyze current repository
+ >  >  current commit: 9b3403375902b76960d1a3d147fb50908fdaa9f8
+ >  > last commit: d5065d936bbb3616446924305810ebc61a2a4b10
+ >  >           # A      .gitdiff2fly.yaml
+ >  >           # A      create_pkg.pkg
+ >  >           # A      create_pks.pks
+ >  >           # A      ddl_cr_table_test.sql
+ > 
+ > => mark files
+ > 
+ >  > skip .gitdiff2fly.yaml
+ >  > => create build
+ >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_0__create_pkg.pkg
+ >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_1__ddl_cr_table_test.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_2__create_pks.pks
+ >  > => the end.
+ > ```
+
+Мы видим, что у нас изменилась приоритетность файлов для будущей миграции. Теперь файл **create_pkg.pkg** стоит на первом месте, потом идёт дефолтный файл **ddl_cr*.sql**, у которого тоже приоритет равен 1, но конфигурационный список будет преобладать над дефолтных списком файлов и приоритетов
+
+## TeamCity
+
+При работе с TeamCity может возникнуть ошибка 
+
+```bash
+error: object directory /opt/buildagent/system/git/git-8A5AC7EA.git/objects does not exist; check .git/objects/info/alternates
+```
+
+Чтобы избавиться от проблемы, нужно выполнить следующие шаги:
+
+1. **Отключением опции Use mirrors в Edit VCS Settings**
+2. **Установкой VCS checkout mode в Always checkout on agent в Version Control Settings**
+
