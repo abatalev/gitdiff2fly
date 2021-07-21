@@ -226,6 +226,10 @@ execute git [push --tags origin master]
 
 ![image-20210704222923512](img/all_branches_with_commits.png)
 
+
+
+**Использование файла *_deps.txt**
+
 Стоит отметить, что если мы хотим поменять приоритет, то мы можем создать файл **1_deps.txt** и указать зависимости через пробел. Например мы создали два файла **1.sql, 2.sql** и хотим изменить порядок миграции так, чтобы первым был 2.sql. Для этого мы прописываем в файл **1__deps.txt**  следующую строку, **тем самым указывая, что 1.sql зависит от 2.sql**
 
 ```bash
@@ -237,3 +241,121 @@ execute git [push --tags origin master]
 Запускаем **gitdiff2flyway** и видим следующий результат.
 
 ![image-20210708180340707](img/deps.png)
+
+## Работа с масками
+
+Для работы с масками в **gitdiff2fly** можно использовать конфигурацию в формате YAML (**используется regexp****). Наименования файла должно быть следующим: **.gitdiff2fly.yaml**, сам файл должен иметь следующую архитектуру:
+
+|    Параметр     |   Тип данных   |     YAML   структура     | Возможные значение |                           Значение                           |
+| :-------------: | :------------: | :----------------------: | :----------------: | :----------------------------------------------------------: |
+| useDefaultMasks |      Bool      | `yaml:"useDefaultMasks"` |    true, false     | Флаг для использование дефолтных параметров, что описаны по умолчанию |
+|      masks      | []MaskPriority |      `yaml:"masks"`      |        List        |                     Массив с параметрами                     |
+
+Дефолтные параметры **useDefaultMasks** включают в себя следующие маски и приоритеты:
+
+|       Маска        | Мод  | Приоритет |
+| :----------------: | :--: | :-------: |
+| `^DDL\_CR.*\.SQL$` |  А   |     1     |
+| `^DDL\_AL.*\.SQL$` |  А   |     2     |
+|    `^.*\.SQL$`     |  *   |     3     |
+|  `^DML\_.*\.SQL$`  |  А   |     4     |
+| `^DML\_.*\.JAVA$`  |  А   |     4     |
+| `^DDL\_DR.*\.SQL$` |  А   |     5     |
+
+**MaskPriority** имеет следующую архитектуру:
+
+| Параметр | Тип данных | YAML   структура  | Возможные значение | Возможность использования regexp |               Значение               |
+| :------: | :--------: | :---------------: | :----------------: | :------------------------------: | :----------------------------------: |
+|   Mask   |   String   |   `yaml:"mask"`   |     ^.*\\.PKG$     |                +                 | Маска для определения названия файла |
+|   Mode   |   String   |   `yaml:"mode"`   |         A          |                +                 |    Информация о действие с файлом    |
+| Priority |  Integer   | `yaml:"priority"` |         1          |                +                 |              Приоритет               |
+
+Пример:
+
+```yaml
+useDefaultMasks: true
+masks:
+  - mask: '^.*\.PKG$'
+    mode: ".*"
+    priority: 2
+  - mask: '^.*\.PKS$'
+    mode: "A"
+    priority: 3
+```
+
+Допустим, мы хотим ввести маски для файлов с суффиксом .PKG. Для этого добавим конфиг **.gitdiff2fly.yaml** в наш репозиторий и несколько файлов (**коммит test config**):
+
+```bash
+ current commit: 4c2a4a2959d234e38e03dd8dff607c5b57c191a2
+    last commit: 6920346f9505a82c1a61446e4e435f6e7627d3e2
+               # M      .gitdiff2fly.yaml
+               # M      create_pkg.pkg
+               # R100   test_3.sql      ddl_cr_test.sql
+               # A      ddl_cr_test_3.sql
+               # A      test_3_2.sql
+               # M      test_4_2.sql
+```
+
+В нашей конфигурации укажем приоритеты для файлов:
+
+```yaml
+useDefaultMasks: true
+masks:
+  - mask: '^.*\.SQL$'
+    mode: '.*'
+    priority: 1
+
+  - mask: '^.*\.PKG$'
+    mode: ".*"
+    priority: 2
+```
+
+Попробуем запустить **gitdiff2fly** и посмотреть на результат:
+
+ > ```bash
+ > > test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2
+ > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
+ > 
+ > => read config
+ >  > use defaults masks
+ >  > added masks from config
+ > => analyze current repository
+ >  current commit: 4c2a4a2959d234e38e03dd8dff607c5b57c191a2
+ >     last commit: 6920346f9505a82c1a61446e4e435f6e7627d3e2
+ >                # M      .gitdiff2fly.yaml
+ >                # M      create_pkg.pkg
+ >                # R100   test_3.sql      ddl_cr_test.sql
+ >                # A      ddl_cr_test_3.sql
+ >                # A      test_3_2.sql
+ >                # M      test_4_2.sql
+ > 
+ > => mark files
+ >  > skip .gitdiff2fly.yaml
+ >  > skip test_3.sql
+ > => create build
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_0__ddl_cr_test_3.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_1__test_3_2.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_2__test_4_2.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_3__create_pkg.pkg
+ > => the end.
+ > ```
+
+Мы видим, что у нас изменилась приоритетность файлов для будущей миграции. 
+
+**Стоит отметить, что если приоритетность масок равна, то производится сортировка по наименованиям файлов.**
+
+**ddl_cr_test_3.sql** идёт первым, так как его приоритет равен 1, после него идут файлы **test_3_2.sql**, **test_4_2.sql** с любым типом модификации (**regexp '.*'**) и приоритетом 1, а в самом конце файл **create_pkg.pkg**, у которого приоритет равен 2.
+
+## TeamCity
+
+При работе с TeamCity может возникнуть ошибка 
+
+```bash
+error: object directory /opt/buildagent/system/git/git-8A5AC7EA.git/objects does not exist; check .git/objects/info/alternates
+```
+
+Чтобы избавиться от проблемы, нужно выполнить следующие шаги:
+
+1. **Отключением опции Use mirrors в Edit VCS Settings**
+2. **Установкой VCS checkout mode в Always checkout on agent в Version Control Settings**
+
