@@ -244,7 +244,7 @@ execute git [push --tags origin master]
 
 ## Работа с масками
 
-Для работы с масками в **gitdiff2fly** можно использовать конфигурацию в формате YAML (**можно использовать regexp**). Наименования файла должно быть следующим: **.gitdiff2fly.yaml**, сам файл должен иметь следующую архитектуру:
+Для работы с масками в **gitdiff2fly** можно использовать конфигурацию в формате YAML (**используется regexp****). Наименования файла должно быть следующим: **.gitdiff2fly.yaml**, сам файл должен иметь следующую архитектуру:
 
 |    Параметр     |   Тип данных   |     YAML   структура     | Возможные значение |                           Значение                           |
 | :-------------: | :------------: | :----------------------: | :----------------: | :----------------------------------------------------------: |
@@ -257,6 +257,7 @@ execute git [push --tags origin master]
 | :----------------: | :--: | :-------: |
 | `^DDL\_CR.*\.SQL$` |  А   |     1     |
 | `^DDL\_AL.*\.SQL$` |  А   |     2     |
+|    `^.*\.SQL$`     |  *   |     3     |
 |  `^DML\_.*\.SQL$`  |  А   |     4     |
 | `^DML\_.*\.JAVA$`  |  А   |     4     |
 | `^DDL\_DR.*\.SQL$` |  А   |     5     |
@@ -274,60 +275,76 @@ execute git [push --tags origin master]
 ```yaml
 useDefaultMasks: true
 masks:
-  - mask: ^.*.PKG$
+  - mask: '^.*\.PKG$'
     mode: ".*"
     priority: 2
-  - mask: ^.*.PKS$
+  - mask: '^.*\.PKS$'
     mode: "A"
     priority: 3
 ```
 
-Допустим, мы хотим ввести маски для файлов с суффиксом .PKG, .PKS. Для этого добавим конфиг **.gitdiff2fly.yaml** в наш репозиторий и несколько файлов (**коммит test config**):
+Допустим, мы хотим ввести маски для файлов с суффиксом .PKG. Для этого добавим конфиг **.gitdiff2fly.yaml** в наш репозиторий и несколько файлов (**коммит test config**):
 
-![image-20210719164016632](img/commit_with_yml_configuration.png)
+```bash
+ current commit: 4c2a4a2959d234e38e03dd8dff607c5b57c191a2
+    last commit: 6920346f9505a82c1a61446e4e435f6e7627d3e2
+               # M      .gitdiff2fly.yaml
+               # M      create_pkg.pkg
+               # R100   test_3.sql      ddl_cr_test.sql
+               # A      ddl_cr_test_3.sql
+               # A      test_3_2.sql
+               # M      test_4_2.sql
+```
 
 В нашей конфигурации укажем приоритеты для файлов:
 
 ```yaml
 useDefaultMasks: true
 masks:
-  - mask: ^.*.PKG$
-    mode: "A"
+  - mask: '^.*\.SQL$'
+    mode: '.*'
     priority: 1
-  - mask: ^.*.PKS$
-    mode: "A"
+
+  - mask: '^.*\.PKG$'
+    mode: ".*"
     priority: 2
 ```
 
-Попробуем запустить gitdiff2fly и посмотреть на результат:
+Попробуем запустить **gitdiff2fly** и посмотреть на результат:
 
  > ```bash
- >  > test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2
- >  > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
+ > > test_repo % ./gitdiff2fly -flyway-repo-path=../tmp_test2
+ > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
  > 
  > => read config
- > 
  >  > use defaults masks
  >  > added masks from config
- >  > => analyze current repository
- >  >  current commit: 9b3403375902b76960d1a3d147fb50908fdaa9f8
- >  > last commit: d5065d936bbb3616446924305810ebc61a2a4b10
- >  >           # A      .gitdiff2fly.yaml
- >  >           # A      create_pkg.pkg
- >  >           # A      create_pks.pks
- >  >           # A      ddl_cr_table_test.sql
+ > => analyze current repository
+ >  current commit: 4c2a4a2959d234e38e03dd8dff607c5b57c191a2
+ >     last commit: 6920346f9505a82c1a61446e4e435f6e7627d3e2
+ >                # M      .gitdiff2fly.yaml
+ >                # M      create_pkg.pkg
+ >                # R100   test_3.sql      ddl_cr_test.sql
+ >                # A      ddl_cr_test_3.sql
+ >                # A      test_3_2.sql
+ >                # M      test_4_2.sql
  > 
  > => mark files
- > 
  >  > skip .gitdiff2fly.yaml
- >  > => create build
- >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_0__create_pkg.pkg
- >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_1__ddl_cr_table_test.sql
- >  > created ../tmp_test2/src/snapshot_2021_07_19_16_41_24/V2021_07_19_16_41_24_2__create_pks.pks
- >  > => the end.
+ >  > skip test_3.sql
+ > => create build
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_0__ddl_cr_test_3.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_1__test_3_2.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_2__test_4_2.sql
+ >  > created ../tmp_test2/src/snapshot_2021_07_21_09_08_49/V2021_07_21_09_08_49_3__create_pkg.pkg
+ > => the end.
  > ```
 
-Мы видим, что у нас изменилась приоритетность файлов для будущей миграции. Теперь файл **create_pkg.pkg** стоит на первом месте, потом идёт дефолтный файл **ddl_cr*.sql**, у которого тоже приоритет равен 1, но конфигурационный список будет преобладать над дефолтных списком файлов и приоритетов
+Мы видим, что у нас изменилась приоритетность файлов для будущей миграции. 
+
+**Стоит отметить, что если приоритетность масок равна, то производится сортировка по наименованиям файлов.**
+
+**ddl_cr_test_3.sql** идёт первым, так как его приоритет равен 1, после него идут файлы **test_3_2.sql**, **test_4_2.sql** с любым типом модификации (**regexp '.*'**) и приоритетом 1, а в самом конце файл **create_pkg.pkg**, у которого приоритет равен 2.
 
 ## TeamCity
 
