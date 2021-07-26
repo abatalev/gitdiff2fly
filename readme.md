@@ -1,5 +1,7 @@
 # GitDiff2Fly
 
+[![Go](https://github.com/abatalev/gitdiff2fly/actions/workflows/go.yml/badge.svg)](https://github.com/abatalev/gitdiff2fly/actions/workflows/go.yml)
+
 ## Intro
 
 GitDiff2Fly is a directory structure creating helper for flyway.
