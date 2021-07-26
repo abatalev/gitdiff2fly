@@ -5,8 +5,7 @@ RUN cd /src/; go build .
 
 # Flyway
 FROM bellsoft/liberica-openjdk-alpine-musl:11.0.11-9 as flyway_build
-RUN apk --no-cache add --update bash openssl
-RUN apk --no-cache add git
+RUN apk --no-cache add --update bash openssl git
 
 # Add the flyway user and step in the directory
 RUN addgroup flyway \
