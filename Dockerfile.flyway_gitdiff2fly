@@ -6,6 +6,7 @@ RUN cd /src/; go build .
 # Flyway
 FROM bellsoft/liberica-openjdk-alpine-musl:11.0.11-9 as flyway_build
 RUN apk --no-cache add --update bash openssl
+RUN apk --no-cache add git
 
 # Add the flyway user and step in the directory
 RUN addgroup flyway \
@@ -22,11 +23,5 @@ RUN wget https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY
   && tar -xzf flyway-commandline-${FLYWAY_VERSION}.tar.gz \
   && mv flyway-${FLYWAY_VERSION}/* . \
   && rm flyway-commandline-${FLYWAY_VERSION}.tar.gz
-
-ENV PATH="/flyway:${PATH}"
-
-USER root
-WORKDIR /work
-RUN apk --no-cache add git
 
 COPY --from=golang_build /src/gitdiff2fly /opt/app/
