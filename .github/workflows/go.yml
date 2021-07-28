@@ -2,7 +2,10 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - 'main'
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -52,6 +55,7 @@ jobs:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=edge,branch=main
+          type=ref,enable=true,priority=600,prefix=pr-,suffix=,event=pr
  
     - name: Build and push
       uses: docker/build-push-action@v2
