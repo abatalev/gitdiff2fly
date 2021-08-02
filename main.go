@@ -91,6 +91,21 @@ func transform(files []FileInfo) {
 	}
 }
 
+func unique(fileinfo []FileInfo) []FileInfo {
+	var unique []FileInfo
+sampleLoop:
+	for _, v := range fileinfo {
+		for i, u := range unique {
+			if v.fileName == u.fileName {
+				unique[i] = v
+				continue sampleLoop
+			}
+		}
+		unique = append(unique, v)
+	}
+	return unique
+}
+
 func markFiles(arr []string) []FileInfo {
 	fmt.Println("=> mark files")
 	files := make([]FileInfo, 0)
@@ -112,8 +127,11 @@ func markFiles(arr []string) []FileInfo {
 		if files[i].priority == files[j].priority {
 			return files[i].fileName < files[j].fileName
 		}
-		return (files[i].priority < files[j].priority)
+		return files[i].priority < files[j].priority
 	})
+
+	files = unique(files)
+
 	return files
 }
 
