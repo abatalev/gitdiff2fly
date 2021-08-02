@@ -21,14 +21,14 @@ func TestMarkFiles(t *testing.T) {
 		gitFile("A", "ddl_cr_1.sql"), gitFile("D", "ddl_cr_9.sql"),
 		gitFile("A", "ddl_alt_b.sql"), gitFile("A", "ddl_alt_a.sql"),
 		gitFile("A", "my_deps.txt"), gitFile("A", "pck_1_spec.sql"),
-		gitFile("A", "ddl_drop_a.sql"), gitFile("M", "ddl_cr_1.sql")}
+		gitFile("A", "ddl_drop_a.sql")}
 	files := markFiles(names)
 
 	testNames := []string{"my_deps.txt", "ddl_cr_9.sql", "ddl_cr_1.sql",
 		"ddl_cr_2.sql", "ddl_cr_3.sql", "ddl_alt_a.sql", "ddl_alt_b.sql",
 		"pck_1_spec.sql", "ddl_drop_a.sql"}
 
-	assertions.Equal(len(files), len(testNames), "lengths not equals!")
+	assertions.Equal(len(names), len(testNames), "lengths not equals!")
 
 	for i, s := range testNames {
 		if files[i].fileName != s {
