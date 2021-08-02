@@ -214,6 +214,7 @@ func TestMatch(t *testing.T) {
 func TestCheckFileWithMode(t *testing.T) {
 	masks = make([]MaskPriority, 0)
 	masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
+	masks = append(masks, MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4})
 	masks = append(masks, MaskPriority{Mask: `^.*\.PKG$`, Mode: ".*", Priority: -100})
 	data := []struct {
 		srcFile FileInfo
@@ -226,6 +227,10 @@ func TestCheckFileWithMode(t *testing.T) {
 		{
 			srcFile: FileInfo{fileName: "a.pkg", mode: "M"},
 			dstFile: FileInfo{priority: -100},
+		},
+		{
+			srcFile: FileInfo{fileName: "ddl_cr_a.sql", mode: "M"},
+			dstFile: FileInfo{priority: -4},
 		},
 	}
 	assertions := require.New(t)
