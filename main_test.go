@@ -128,6 +128,24 @@ func TestCalcSequence(t *testing.T) {
 				{fileName: "ddl_drop_1.sql", unloaded: false, priority: 5},
 			},
 		},
+		{
+			name:  "skipped",
+			names: []string{"ddl_cr_1.sql"},
+			files: []FileInfo{
+				{fileName: "ddl_cr_1.sql", unloaded: false, priority: -5},
+				{fileName: "ddl_cr_1.sql", unloaded: false, priority: 1},
+			},
+		},
+		{
+			name:  "repeated",
+			names: []string{"fun_1.sql", "fun_b.sql", "fun_a.sql"},
+			files: []FileInfo{
+				{fileName: "fun_1.sql", unloaded: false, priority: 1},
+				{fileName: "fun_a.sql", unloaded: false, priority: 3, after: []int{2}},
+				{fileName: "fun_b.sql", unloaded: false, priority: 3, before: []int{1}},
+				{fileName: "fun_1.sql", unloaded: false, priority: 1},
+			},
+		},
 	}
 
 	assertions := require.New(t)
@@ -214,6 +232,7 @@ func TestMatch(t *testing.T) {
 func TestCheckFileWithMode(t *testing.T) {
 	masks = make([]MaskPriority, 0)
 	masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
+	masks = append(masks, MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4})
 	masks = append(masks, MaskPriority{Mask: `^.*\.PKG$`, Mode: ".*", Priority: -100})
 	data := []struct {
 		srcFile FileInfo
@@ -226,6 +245,10 @@ func TestCheckFileWithMode(t *testing.T) {
 		{
 			srcFile: FileInfo{fileName: "a.pkg", mode: "M"},
 			dstFile: FileInfo{priority: -100},
+		},
+		{
+			srcFile: FileInfo{fileName: "ddl_cr_a.sql", mode: "M"},
+			dstFile: FileInfo{priority: -4},
 		},
 	}
 	assertions := require.New(t)
