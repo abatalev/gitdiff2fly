@@ -201,7 +201,7 @@ func parseDependencies(files []FileInfo, fs fsInterface) {
 	}
 }
 
-func calcStep(files, seq []FileInfo) ([]FileInfo, bool) {
+func calcStep(files, seq []FileInfo, names map[string]bool) ([]FileInfo, bool) {
 	for jj := range files {
 		if files[jj].unloaded {
 			continue
@@ -211,6 +211,11 @@ func calcStep(files, seq []FileInfo) ([]FileInfo, bool) {
 			continue
 		}
 
+		if names[files[jj].fileName] {
+			continue
+		}
+
+		names[files[jj].fileName] = true
 		files[jj].unloaded = true
 		seq = append(seq, files[jj])
 
@@ -231,9 +236,10 @@ func calcStep(files, seq []FileInfo) ([]FileInfo, bool) {
 
 func calcSequence(files []FileInfo) []FileInfo {
 	seq := make([]FileInfo, 0)
+	names := make(map[string]bool)
 	also := false
 	for !also {
-		seq, also = calcStep(files, seq)
+		seq, also = calcStep(files, seq, names)
 	}
 	return seq
 }
