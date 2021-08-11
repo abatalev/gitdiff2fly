@@ -2,6 +2,7 @@ package main
 
 import (
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -447,5 +448,50 @@ func TestReadConfig(t *testing.T) {
 		cfg := readConfig(r)
 		assertions := require.New(t)
 		assertions.True(cfg.UseDefaultMasks, i)
+	}
+}
+
+func TestProcessingDepList(t *testing.T) {
+	initMasks(true)
+	assertions := require.New(t)
+	dataSet := []struct {
+		title string
+		files []FileInfo
+		deps  []string
+		names []string
+	}{
+		{
+			title: "variant 1",
+			files: []FileInfo{
+				*checkFile(&FileInfo{fileName: "ddl_alt_1.sql", mode: "A"}),
+				*checkFile(&FileInfo{fileName: "ddl_cr_1.sql", mode: "A"}),
+				*checkFile(&FileInfo{fileName: "ddl_alt_1.sql", mode: "M"}),
+				*checkFile(&FileInfo{fileName: "ddl_cr_1.sql", mode: "M"}),
+			},
+			deps: []string{
+				"test/al/ddl_al_account_fast_payment.sql test/al/ddl_al_client_fast_payment.sql",
+				"ddl_cr_1.sql ddl_alt_1.sql",
+				"ddl_cr_5.sql ddl_al_test.sql"},
+			names: []string{"ddl_alt_1.sql", "ddl_cr_1.sql"},
+		},
+	}
+
+	for _, data := range dataSet {
+		transform(data.files)
+
+		sort.Slice(data.files, func(i, j int) bool {
+			if data.files[i].priority == data.files[j].priority {
+				return data.files[i].fileName < data.files[j].fileName
+			}
+			return (data.files[i].priority < data.files[j].priority)
+		})
+		parseDepLines(data.files, data.deps)
+
+		buildFiles := calcSequence(data.files)
+
+		assertions.Len(buildFiles, len(data.names), data.title)
+		for i, name := range data.names {
+			assertions.Equal(name, buildFiles[i].fileName, data.title, i)
+		}
 	}
 }

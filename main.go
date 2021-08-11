@@ -119,6 +119,7 @@ func markFiles(arr []string) []FileInfo {
 
 func readyToBuild(files []FileInfo, file *FileInfo) bool {
 	if file.priority <= 0 {
+		file.unloaded = true
 		return false
 	}
 
@@ -152,7 +153,7 @@ func addFileToBuild(file *FileInfo, dstDir, versionNumber string, localIdx int, 
 
 func find(files []FileInfo, fileName string) int {
 	for i, f := range files {
-		if f.fileName == fileName {
+		if f.fileName == fileName && f.priority > 0 {
 			return i
 		}
 	}
