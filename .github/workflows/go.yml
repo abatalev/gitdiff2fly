@@ -55,7 +55,7 @@ jobs:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=edge,branch=main
-          type=ref,enable=true,priority=600,prefix=pr-,suffix=,event=p
+          type=ref,enable=true,priority=600,prefix=pr-,suffix=,event=pr
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
  
