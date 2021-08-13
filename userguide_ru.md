@@ -112,6 +112,10 @@ GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
 
 Пробуем вызвать **gitdiff2fly** и получаем ответ, что последний коммит соответствует последнему коммиту, записанному в файл last_commit, поэтому программа ничего не делает и пропускает выполнение.
 
+**Важно!!!**
+
+**Стоит отметить, что для правильный работы тестовой сборки нужно зафиксировать состояние нашего репозитория первым коммитом, который может содержать README.md или какие-либо другие файлы, не относящиеся к миграции**
+
 ```bash
 test_repo $> ./gitdiff2fly -flyway-repo-path=../tmp_test2  
 
@@ -156,14 +160,14 @@ test_repo $> git commit -m 'test commit repo'
  > GitDiff2Fly (C) Copyright 2021 by Andrey Batalev
  > 
  > => analyze current repository
- >  current commit: d3295e70aa1a67a88b95a09118b577ab92fcb64d
- >     last commit: 80dcf4c00a31c65f9d369c8b347ff2f3ba32126e
- >                # A      1_deps.txt
- >                # A      ddl_cr_3.sql
- >                # A      ddl_dr_3.sql
- >                # A      dml_3.sql
- >                # A      file_ignore.txt
- >                # A      select_test.sql
+ > current commit: d3295e70aa1a67a88b95a09118b577ab92fcb64d
+ >  last commit: 80dcf4c00a31c65f9d369c8b347ff2f3ba32126e
+ >             # A      1_deps.txt
+ >             # A      ddl_cr_3.sql
+ >             # A      ddl_dr_3.sql
+ >             # A      dml_3.sql
+ >             # A      file_ignore.txt
+ >             # A      select_test.sql
  > 
  > => mark files
  > 
@@ -358,4 +362,3 @@ error: object directory /opt/buildagent/system/git/git-8A5AC7EA.git/objects does
 
 1. **Отключением опции Use mirrors в Edit VCS Settings**
 2. **Установкой VCS checkout mode в Always checkout on agent в Version Control Settings**
-
