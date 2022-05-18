@@ -64,11 +64,6 @@ func checkFile(file *FileInfo) *FileInfo {
 		}
 	}
 
-	if match(`^.*\.SQL$`, normName) {
-		file.priority = 3
-		return file
-	}
-
 	fmt.Println(" > skip", file.fileName)
 	file.priority = -1
 	file.unloaded = true
@@ -396,6 +391,8 @@ func initMasks(useDefaultMasks bool) {
 		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.SQL$`, Mode: "A", Priority: 4})
 		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.JAVA$`, Mode: "A", Priority: 4})
 		masks = append(masks, MaskPriority{Mask: `^DDL\_DR.*\.SQL$`, Mode: "A", Priority: 5})
+		masks = append(masks, MaskPriority{Mask: `^.*\.SQL$`, Mode: "A", Priority: 3})
+		masks = append(masks, MaskPriority{Mask: `^.*\.SQL$`, Mode: "M", Priority: 3})
 	}
 }
 

@@ -190,8 +190,8 @@ func TestParseDepLines(t *testing.T) {
 	}{
 		{
 			files: []FileInfo{
-				{fileName: "a"},
-				{fileName: "b"},
+				{fileName: "a", priority: 1},
+				{fileName: "b", priority: 1},
 			},
 			lines:  strings.Split("a b\n", "\n"),
 			before: []bool{false, true},
@@ -207,16 +207,16 @@ func TestParseDepLines(t *testing.T) {
 			after:  []bool{false, false},
 		},
 	}
-	for _, r := range data {
+	for idx, r := range data {
 		parseDepLines(r.files, r.lines)
 		for i, v := range r.before {
 			if (r.files[i].before == nil) == v {
-				t.Fatal("before", i)
+				t.Fatal("variant", idx, "- before", i)
 			}
 		}
 		for i, v := range r.after {
 			if (r.files[i].after == nil) == v {
-				t.Fatal("after", i)
+				t.Fatal("variant", idx, "- after", i)
 			}
 		}
 	}
@@ -298,9 +298,9 @@ func TestCheckFile(t *testing.T) {
 		},
 	}
 	assertions := require.New(t)
-	for _, row := range data {
+	for idx, row := range data {
 		o := checkFile(&row.srcFile)
-		assertions.Equal(o.priority, row.dstFile.priority)
+		assertions.Equal(o.priority, row.dstFile.priority, idx)
 	}
 }
 
@@ -435,6 +435,7 @@ func TestRun(t *testing.T) {
 	}
 	assertions := require.New(t)
 	for i, data := range dataSet {
+		initMasks(true)
 		assertions.Equal(data.result, run(data.argVersion, "/tmp/",
 			FakeGit{isFirst: data.isFirst, lastRelease: data.lastRelease, diffFiles: data.diffFiles},
 			&FakeSystem{}),
