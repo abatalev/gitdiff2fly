@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+const (
+	DIRMODE = 0755
+)
+
 type cmdInterface interface {
 	command(dir, name string, args ...string) (string, error)
 }
@@ -111,7 +115,7 @@ func (git Git) diff(last, curr string, inc bool) []string {
 func (git Git) makeRelease(flyRepoPath, verPath, version, curr string) {
 	fmt.Println("=> make release")
 	fmt.Println(" > saved last_commit")
-	err := git.io.WriteFile(filepath.Join(flyRepoPath, "last_commit"), []byte(curr), 0755)
+	err := git.io.WriteFile(filepath.Join(flyRepoPath, "last_commit"), []byte(curr), DIRMODE)
 	if err != nil {
 		panic(err)
 	}

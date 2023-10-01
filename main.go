@@ -15,6 +15,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	GITMODER100 = "R100"
+)
+
 type FileInfo struct {
 	unloaded       bool
 	priority       int
@@ -71,7 +75,7 @@ func checkFile(file *FileInfo) *FileInfo {
 
 func replace(files []FileInfo, from, to string) {
 	for i, f := range files {
-		if f.mode != "R100" && f.fileName == from {
+		if f.mode != GITMODER100 && f.fileName == from {
 			files[i].fileName = to
 		}
 	}
@@ -79,7 +83,7 @@ func replace(files []FileInfo, from, to string) {
 
 func transform(files []FileInfo) {
 	for _, f := range files {
-		if f.mode == "R100" && f.priority == -2 {
+		if f.mode == GITMODER100 && f.priority == -2 {
 			replace(files, f.fileName, f.targetFileName)
 		}
 	}
@@ -310,7 +314,7 @@ func mkDirIfNotExist(dirName string) {
 	if _, err := os.Stat(dirName); err == nil {
 		return
 	}
-	if err := os.MkdirAll(dirName, 0755); err != nil {
+	if err := os.MkdirAll(dirName, DIRMODE); err != nil {
 		panic(err)
 	}
 }
