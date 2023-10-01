@@ -30,14 +30,14 @@ type FakeIO struct {
 	result  string
 }
 
-func (io FakeIO) ReadFile(filename string) ([]byte, error) {
+func (io FakeIO) ReadFile(_ string) ([]byte, error) {
 	if io.isExist {
 		return []byte(io.result), nil
 	}
 	return []byte{}, errors.New("can't work with 42")
 }
 
-func (io FakeIO) WriteFile(filename string, data []byte, perm fs.FileMode) error {
+func (io FakeIO) WriteFile(_ string, _ []byte, _ fs.FileMode) error {
 	return nil
 }
 
@@ -46,7 +46,7 @@ type FakeCmd struct {
 	result string
 }
 
-func (c *FakeCmd) command(dir, name string, args ...string) (string, error) {
+func (c *FakeCmd) command(_, _ string, _ ...string) (string, error) {
 	c.count++
 	return c.result, nil
 }
@@ -85,7 +85,7 @@ func TestGetLastRelease(t *testing.T) {
 		s, _ := Git{
 			io:  FakeIO{isExist: data.isExist, result: data.fileStr},
 			cmd: &FakeCmd{result: data.cmdRes},
-		}.getLastRelease(data.curr, data.fileName)
+		}.getLastRelease(data.fileName)
 		require.New(t).Equal(s, data.result)
 	}
 }

@@ -41,11 +41,11 @@ func TestMarkFiles(t *testing.T) {
 type FakeSystem struct {
 }
 
-func (os *FakeSystem) copy(src, dst string) error {
+func (os *FakeSystem) copy(_, _ string) error {
 	return nil
 }
 
-func (os *FakeSystem) readFile(fileName string) []string {
+func (os *FakeSystem) readFile(_ string) []string {
 	return []string{""}
 }
 
@@ -255,6 +255,7 @@ func TestCheckFileWithMode(t *testing.T) {
 	}
 	assertions := require.New(t)
 	for _, row := range data {
+		row := row
 		o := checkFile(&row.srcFile)
 		assertions.Equal(o.priority, row.dstFile.priority)
 	}
@@ -300,6 +301,7 @@ func TestCheckFile(t *testing.T) {
 	}
 	assertions := require.New(t)
 	for idx, row := range data {
+		row := row
 		o := checkFile(&row.srcFile)
 		assertions.Equal(o.priority, row.dstFile.priority, idx)
 	}
@@ -411,14 +413,14 @@ type FakeGit struct {
 }
 
 func (git FakeGit) getCurrentVersion() string { return "sha1" }
-func (git FakeGit) getLastRelease(curr, fileName string) (string, bool) {
+func (git FakeGit) getLastRelease(_ string) (string, bool) {
 	return git.lastRelease, git.isFirst
 }
-func (git FakeGit) diff(last, curr string, inc bool) []string {
+func (git FakeGit) diff(_, _ string, _ bool) []string {
 	return git.diffFiles
 }
-func (git FakeGit) isAncestor(last, curr string) bool                      { return true }
-func (git FakeGit) makeRelease(flyRepoPath, verPath, version, curr string) {}
+func (git FakeGit) isAncestor(_, _ string) bool   { return true }
+func (git FakeGit) makeRelease(_, _, _, _ string) {}
 
 func TestRun(t *testing.T) {
 	dataSet := []struct {

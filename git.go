@@ -50,7 +50,7 @@ func (io RealIO) WriteFile(filename string, data []byte, perm fs.FileMode) error
 
 type gitInterface interface {
 	getCurrentVersion() string
-	getLastRelease(curr string, fileName string) (string, bool)
+	getLastRelease(fileName string) (string, bool)
 	diff(last, curr string, inc bool) []string
 	isAncestor(last, curr string) bool
 	makeRelease(flyRepoPath, verPath, version, curr string)
@@ -74,7 +74,7 @@ func (git Git) isAncestor(last, curr string) bool {
 	return exec.Command("git", "merge-base", "--is-ancestor", last, curr).Run() != nil
 }
 
-func (git Git) getLastRelease(curr, fileName string) (string, bool) {
+func (git Git) getLastRelease(fileName string) (string, bool) {
 	dat, err := git.io.ReadFile(fileName)
 	if err == nil {
 		last := string(dat)

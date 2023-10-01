@@ -320,7 +320,7 @@ func run(argVersion, flyRepoPath string, git gitInterface, fs fsInterface) int {
 	curr := git.getCurrentVersion()
 	fmt.Printf(" current commit: %s\n", curr)
 
-	last, isFirstCommit := git.getLastRelease(curr, filepath.Join(flyRepoPath, LastCommitFileName))
+	last, isFirstCommit := git.getLastRelease(filepath.Join(flyRepoPath, LastCommitFileName))
 	fileNames := showArr(git.diff(last, curr, isFirstCommit))
 
 	if !isFirstCommit && curr == last {
