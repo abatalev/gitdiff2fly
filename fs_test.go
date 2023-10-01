@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -13,7 +12,7 @@ func TestCopy(t *testing.T) {
 	defer os.Remove("b.txt")
 
 	fsSys := OsSystem{}
-	if err0 := ioutil.WriteFile("a.txt", []byte("a\nb"), 0600); err0 != nil {
+	if err0 := os.WriteFile("a.txt", []byte("a\nb"), 0600); err0 != nil {
 		t.Fail()
 	}
 	err := fsSys.copy("a.txt", "b.txt")

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -402,7 +401,7 @@ type conf struct {
 }
 
 func (c *conf) getConf(cfgFileName string) *conf {
-	yamlFile, err := ioutil.ReadFile(cfgFileName)
+	yamlFile, err := os.ReadFile(cfgFileName)
 	if err != nil {
 		log.Printf(" > error read   #%v ", err)
 	}

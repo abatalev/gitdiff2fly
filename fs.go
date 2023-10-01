@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -17,7 +16,7 @@ type OsSystem struct {
 }
 
 func (osx *OsSystem) readFile(fileName string) []string {
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err)
 	}
