@@ -384,14 +384,15 @@ func initMasks(useDefaultMasks bool) {
 	masks = make([]MaskPriority, 0)
 	if useDefaultMasks {
 		fmt.Println(" > use defaults masks")
-		masks = append(masks, MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4})
-		masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
-		masks = append(masks, MaskPriority{Mask: `^DDL\_AL.*\.SQL$`, Mode: "A", Priority: 2})
-		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.SQL$`, Mode: "A", Priority: 4})
-		masks = append(masks, MaskPriority{Mask: `^DML\_.*\.JAVA$`, Mode: "A", Priority: 4})
-		masks = append(masks, MaskPriority{Mask: `^DDL\_DR.*\.SQL$`, Mode: "A", Priority: 5})
-		masks = append(masks, MaskPriority{Mask: `^.*\.SQL$`, Mode: "A", Priority: 3})
-		masks = append(masks, MaskPriority{Mask: `^.*\.SQL$`, Mode: "M", Priority: 3})
+		masks = append(masks,
+			MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4},
+			MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1},
+			MaskPriority{Mask: `^DDL\_AL.*\.SQL$`, Mode: "A", Priority: 2},
+			MaskPriority{Mask: `^DML\_.*\.SQL$`, Mode: "A", Priority: 4},
+			MaskPriority{Mask: `^DML\_.*\.JAVA$`, Mode: "A", Priority: 4},
+			MaskPriority{Mask: `^DDL\_DR.*\.SQL$`, Mode: "A", Priority: 5},
+			MaskPriority{Mask: `^.*\.SQL$`, Mode: "A", Priority: 3},
+			MaskPriority{Mask: `^.*\.SQL$`, Mode: "M", Priority: 3})
 	}
 }
 

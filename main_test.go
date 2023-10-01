@@ -232,9 +232,10 @@ func TestMatch(t *testing.T) {
 
 func TestCheckFileWithMode(t *testing.T) {
 	masks = make([]MaskPriority, 0)
-	masks = append(masks, MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1})
-	masks = append(masks, MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4})
-	masks = append(masks, MaskPriority{Mask: `^.*\.PKG$`, Mode: ".*", Priority: -100})
+	masks = append(masks,
+		MaskPriority{Mask: `^DDL\_CR.*\.SQL$`, Mode: "A", Priority: 1},
+		MaskPriority{Mask: `^DDL\_.*\.SQL$`, Mode: "M", Priority: -4},
+		MaskPriority{Mask: `^.*\.PKG$`, Mode: ".*", Priority: -100})
 	data := []struct {
 		srcFile FileInfo
 		dstFile FileInfo
