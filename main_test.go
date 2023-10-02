@@ -412,6 +412,7 @@ type FakeGit struct {
 	diffFiles   []string
 }
 
+func (git FakeGit) getRepoDir() string        { return "/tmp/" }
 func (git FakeGit) getCurrentVersion() string { return "sha1" }
 func (git FakeGit) getLastRelease(_ string) (string, bool) {
 	return git.lastRelease, git.isFirst
@@ -419,8 +420,8 @@ func (git FakeGit) getLastRelease(_ string) (string, bool) {
 func (git FakeGit) diff(_, _ string, _ bool) []string {
 	return git.diffFiles
 }
-func (git FakeGit) isAncestor(_, _ string) bool   { return true }
-func (git FakeGit) makeRelease(_, _, _, _ string) {}
+func (git FakeGit) isAncestor(_, _ string) bool { return true }
+func (git FakeGit) makeRelease(_, _, _ string)  {}
 
 func TestRun(t *testing.T) {
 	dataSet := []struct {
@@ -439,7 +440,8 @@ func TestRun(t *testing.T) {
 	assertions := require.New(t)
 	for i, data := range dataSet {
 		initMasks(true)
-		assertions.Equal(data.result, run(data.argVersion, "/tmp/",
+		assertions.Equal(data.result, run(data.argVersion,
+			FakeGit{}, //path: "/tmp/"},
 			FakeGit{isFirst: data.isFirst, lastRelease: data.lastRelease, diffFiles: data.diffFiles},
 			&FakeSystem{}),
 			"variant %d", i)

@@ -57,12 +57,21 @@ type gitInterface interface {
 	getLastRelease(fileName string) (string, bool)
 	diff(last, curr string, inc bool) []string
 	isAncestor(last, curr string) bool
-	makeRelease(flyRepoPath, verPath, version, curr string)
+	makeRelease(verPath, version, curr string)
+	getRepoDir() string
 }
 
 type Git struct {
-	io  ioInterface
-	cmd cmdInterface
+	io   ioInterface
+	cmd  cmdInterface
+	path string
+}
+
+func (git Git) getRepoDir() string {
+	if git.path != "" {
+		return git.path
+	}
+	return "."
 }
 
 func (git Git) doGit(dir string, args ...string) {
@@ -78,6 +87,11 @@ func (git Git) isAncestor(last, curr string) bool {
 	return exec.Command("git", "merge-base", "--is-ancestor", last, curr).Run() != nil
 }
 
+func (git Git) getFirstCommit() string {
+	first, _ := git.cmd.command(git.getRepoDir(), "git", "rev-list", "--max-parents=0", "HEAD")
+	return first
+}
+
 func (git Git) getLastRelease(fileName string) (string, bool) {
 	dat, err := git.io.ReadFile(fileName)
 	if err == nil {
@@ -86,13 +100,13 @@ func (git Git) getLastRelease(fileName string) (string, bool) {
 		return last, false
 	}
 
-	last, _ := git.cmd.command(".", "git", "rev-list", "--max-parents=0", "HEAD")
-	fmt.Printf("   first commit: %s\n", last)
-	return last, true
+	first := git.getFirstCommit()
+	fmt.Printf("   first commit: %s\n", first)
+	return first, true
 }
 
 func (git Git) getCurrentVersion() string {
-	curr, err := git.cmd.command(".", "git", "rev-parse", "HEAD")
+	curr, err := git.cmd.command(git.getRepoDir(), "git", "rev-parse", "HEAD")
 	if err != nil {
 		log.Fatalf("cmd.Run() failed with %s, error text: %s\n", err, curr)
 	}
@@ -105,24 +119,24 @@ func (git Git) diff(last, curr string, inc bool) []string {
 		return arr
 	}
 	if inc {
-		str, _ := git.cmd.command(".", "git", "show", "--pretty=format:", "--name-status", last)
+		str, _ := git.cmd.command(git.getRepoDir(), "git", "show", "--pretty=format:", "--name-status", last)
 		arr = append(arr, strings.Split(str, "\n")...)
 	}
-	str, _ := git.cmd.command(".", "git", "diff", "--name-status", last+".."+curr)
+	str, _ := git.cmd.command(git.getRepoDir(), "git", "diff", "--name-status", last+".."+curr)
 	return append(arr, strings.Split(str, "\n")...)
 }
 
-func (git Git) makeRelease(flyRepoPath, verPath, version, curr string) {
+func (git Git) makeRelease(verPath, version, curr string) {
 	fmt.Println("=> make release")
 	fmt.Println(" > saved last_commit")
-	err := git.io.WriteFile(filepath.Join(flyRepoPath, "last_commit"), []byte(curr), DIRMODE)
+	err := git.io.WriteFile(filepath.Join(git.getRepoDir(), "last_commit"), []byte(curr), DIRMODE)
 	if err != nil {
 		panic(err)
 	}
-	git.doGit(flyRepoPath, "add", filepath.Join("src", verPath))
-	git.doGit(flyRepoPath, "add", "last_commit")
-	git.doGit(flyRepoPath, "commit", "-m", "version "+version)
-	git.doGit(flyRepoPath, "tag", "changeset_"+curr)
-	git.doGit(flyRepoPath, "tag", "v"+version)
-	git.doGit(flyRepoPath, "push", "--tags", "origin", "master")
+	git.doGit(git.getRepoDir(), "add", filepath.Join("src", verPath))
+	git.doGit(git.getRepoDir(), "add", "last_commit")
+	git.doGit(git.getRepoDir(), "commit", "-m", "version "+version)
+	git.doGit(git.getRepoDir(), "tag", "changeset_"+curr)
+	git.doGit(git.getRepoDir(), "tag", "v"+version)
+	git.doGit(git.getRepoDir(), "push", "--tags", "origin", "master")
 }

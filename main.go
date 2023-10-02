@@ -319,12 +319,12 @@ func mkDirIfNotExist(dirName string) {
 	}
 }
 
-func run(argVersion, flyRepoPath string, git gitInterface, fs fsInterface) int {
+func run(argVersion string, flyRepoGit, git gitInterface, fs fsInterface) int {
 	fmt.Println("=> analyze current repository")
 	curr := git.getCurrentVersion()
 	fmt.Printf(" current commit: %s\n", curr)
 
-	last, isFirstCommit := git.getLastRelease(filepath.Join(flyRepoPath, LastCommitFileName))
+	last, isFirstCommit := git.getLastRelease(filepath.Join(flyRepoGit.getRepoDir(), LastCommitFileName))
 	fileNames := showArr(git.diff(last, curr, isFirstCommit))
 
 	if !isFirstCommit && curr == last {
@@ -343,8 +343,8 @@ func run(argVersion, flyRepoPath string, git gitInterface, fs fsInterface) int {
 
 	pArgs := parse(argVersion, time.Now())
 
-	dir := filepath.Join(flyRepoPath, "src", pArgs.dirName)
-	mkDirIfNotExist(filepath.Join(flyRepoPath, "src"))
+	dir := filepath.Join(flyRepoGit.getRepoDir(), "src", pArgs.dirName)
+	mkDirIfNotExist(filepath.Join(flyRepoGit.getRepoDir(), "src"))
 	mkDirIfNotExist(dir)
 
 	if !createBuild(markFiles(fileNames), dir, pArgs.version, fs) {
@@ -358,7 +358,7 @@ func run(argVersion, flyRepoPath string, git gitInterface, fs fsInterface) int {
 		return 0
 	}
 
-	git.makeRelease(flyRepoPath, pArgs.dirName, argVersion, curr)
+	flyRepoGit.makeRelease(pArgs.dirName, argVersion, curr)
 	fmt.Println("=> the end.")
 	return 0
 }
@@ -454,6 +454,8 @@ func main() {
 	}
 
 	os.Exit(
-		run(*args.argVersion, *args.flyRepoPath,
-			Git{io: RealIO{}, cmd: &OsCmd{}}, &OsSystem{}))
+		run(*args.argVersion,
+			Git{io: RealIO{}, cmd: &OsCmd{}, path: *args.flyRepoPath},
+			Git{io: RealIO{}, cmd: &OsCmd{}},
+			&OsSystem{}))
 }

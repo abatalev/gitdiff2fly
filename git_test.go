@@ -53,7 +53,7 @@ func (c *FakeCmd) command(_, _ string, _ ...string) (string, error) {
 
 func TestMakeRelease(t *testing.T) {
 	fakeCmd := FakeCmd{result: "1"}
-	Git{cmd: &fakeCmd, io: FakeIO{}}.makeRelease("/tmp/", "V1_1", "1.1", "sha1")
+	Git{cmd: &fakeCmd, io: FakeIO{}}.makeRelease("V1_1", "1.1", "sha1")
 	assertions := require.New(t)
 	assertions.Equal(6, fakeCmd.count)
 }
