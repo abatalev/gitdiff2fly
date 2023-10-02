@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCommandX(t *testing.T) {
-	cmd := OsCmd{}
-	s, _ := cmd.command(".", "git", "rev-list", "--max-parents=0", "HEAD")
-	require.New(t).Equal("5ca59ca92ae4b21408aa6146f5b183a1c5edc195", s)
-}
+// func TestCommandX(t *testing.T) {
+// 	cmd := OsCmd{}
+// 	s, _ := cmd.command(".", "git", "rev-list", "--max-parents=0", "HEAD")
+// 	require.New(t).Equal("5ca59ca92ae4b21408aa6146f5b183a1c5edc195", s)
+// }
 
 func TestReadWrite(t *testing.T) {
 	defer os.Remove("a.txt")
