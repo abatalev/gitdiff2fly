@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func gitFile(mode, name string) string {
-	return mode + "\t" + name
+func gitFile(mode, fileName string) FileInfo {
+	return *checkFile(&FileInfo{mode: mode, fileName: fileName, targetFileName: "", priority: -1})
 }
 
 func TestMarkFiles(t *testing.T) {
 	initMasks(true)
 	assertions := require.New(t)
 
-	names := []string{gitFile("A", "ddl_cr_3.sql"), gitFile("A", "ddl_cr_2.sql"),
+	names := []FileInfo{gitFile("A", "ddl_cr_3.sql"), gitFile("A", "ddl_cr_2.sql"),
 		gitFile("A", "ddl_cr_1.sql"), gitFile("D", "ddl_cr_9.sql"),
 		gitFile("A", "ddl_alt_b.sql"), gitFile("A", "ddl_alt_a.sql"),
 		gitFile("A", "my_deps.txt"), gitFile("A", "pck_1_spec.sql"),
@@ -409,7 +409,7 @@ func TestParse(t *testing.T) {
 type FakeGit struct {
 	isFirst     bool
 	lastRelease string
-	diffFiles   []string
+	diffFiles   string
 }
 
 func (git FakeGit) getRepoDir() string        { return "/tmp/" }
@@ -417,8 +417,8 @@ func (git FakeGit) getCurrentVersion() string { return "sha1" }
 func (git FakeGit) getLastRelease(_ string) (string, bool) {
 	return git.lastRelease, git.isFirst
 }
-func (git FakeGit) diff(_, _ string, _ bool) []string {
-	return git.diffFiles
+func (git FakeGit) diff(_, _ string, _ bool) []GitFileInfo {
+	return makeGitFileInfos(git.diffFiles)
 }
 func (git FakeGit) isAncestor(_, _ string) bool { return true }
 func (git FakeGit) makeRelease(_, _, _ string)  {}
@@ -429,13 +429,13 @@ func TestRun(t *testing.T) {
 		isFirst     bool
 		lastRelease string
 		result      int
-		diffFiles   []string
+		diffFiles   string
 	}{
-		{argVersion: "1.1", isFirst: true, lastRelease: "sha1", diffFiles: []string{"A\tfile1.sql"}, result: 0},
-		{argVersion: "1.1", isFirst: false, lastRelease: "sha1", diffFiles: []string{"A\tfile1.sql"}, result: 1},
-		{argVersion: "1.1", isFirst: false, lastRelease: "sha2", diffFiles: []string{"A\tfile1.sql"}, result: 1},
-		{argVersion: "1.1", isFirst: true, lastRelease: "sha1", diffFiles: []string{}, result: 1},
-		{argVersion: "SNAPSHOT", isFirst: true, lastRelease: "sha1", diffFiles: []string{"A\tfile1.sql"}, result: 0},
+		{argVersion: "1.1", isFirst: true, lastRelease: "sha1", diffFiles: "A\tfile1.sql", result: 0},
+		{argVersion: "1.1", isFirst: false, lastRelease: "sha1", diffFiles: "A\tfile1.sql", result: 1},
+		{argVersion: "1.1", isFirst: false, lastRelease: "sha2", diffFiles: "A\tfile1.sql", result: 1},
+		{argVersion: "1.1", isFirst: true, lastRelease: "sha1", diffFiles: "", result: 1},
+		{argVersion: "SNAPSHOT", isFirst: true, lastRelease: "sha1", diffFiles: "A\tfile1.sql", result: 0},
 	}
 	assertions := require.New(t)
 	for i, data := range dataSet {

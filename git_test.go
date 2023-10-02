@@ -59,7 +59,7 @@ func TestMakeRelease(t *testing.T) {
 }
 
 func TestDiff(t *testing.T) {
-	s := Git{cmd: &FakeCmd{result: "1"}}.diff("1", "1", true)
+	s := Git{cmd: &FakeCmd{result: "M\t1.txt"}}.diff("1", "1", true)
 	require.New(t).Len(s, 2)
 }
 

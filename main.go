@@ -89,21 +89,24 @@ func transform(files []FileInfo) {
 	}
 }
 
-func markFiles(arr []string) []FileInfo {
-	fmt.Println("=> mark files")
-	files := make([]FileInfo, 0)
+func showArr(arr []GitFileInfo) {
 	for _, s := range arr {
-		if s == "" {
-			continue
-		}
-		p := strings.Split(s, "\t")
-		if len(p) == 2 {
-			files = append(files, *checkFile(&FileInfo{mode: p[0], fileName: p[1], priority: -1}))
-		} else {
-			files = append(files, *checkFile(&FileInfo{mode: p[0], fileName: p[1], targetFileName: p[2], priority: -1}))
-		}
+		fmt.Println("               #", s.mode, s.fileName, s.targetFileName)
 	}
+	fmt.Println()
+}
 
+func createFilesAndShow(gitFiles []GitFileInfo) []FileInfo {
+	showArr(gitFiles)
+	files := make([]FileInfo, 0)
+	for _, s := range gitFiles {
+		files = append(files, *checkFile(&FileInfo{mode: s.mode, fileName: s.fileName, targetFileName: s.targetFileName, priority: -1}))
+	}
+	return files
+}
+
+func markFiles(files []FileInfo) []FileInfo {
+	fmt.Println("=> mark files")
 	transform(files)
 
 	sort.Slice(files, func(i, j int) bool {
@@ -302,14 +305,6 @@ func isAncestor(isFirstCommit bool, last, curr string, git gitInterface) bool {
 	return git.isAncestor(last, curr)
 }
 
-func showArr(arr []string) []string {
-	for _, s := range arr {
-		fmt.Println("               #", s)
-	}
-	fmt.Println()
-	return arr
-}
-
 func mkDirIfNotExist(dirName string) {
 	if _, err := os.Stat(dirName); err == nil {
 		return
@@ -325,7 +320,7 @@ func run(argVersion string, flyRepoGit, git gitInterface, fs fsInterface) int {
 	fmt.Printf(" current commit: %s\n", curr)
 
 	last, isFirstCommit := git.getLastRelease(filepath.Join(flyRepoGit.getRepoDir(), LastCommitFileName))
-	fileNames := showArr(git.diff(last, curr, isFirstCommit))
+	files := createFilesAndShow(git.diff(last, curr, isFirstCommit))
 
 	if !isFirstCommit && curr == last {
 		fmt.Println("=> analyze commits")
@@ -347,7 +342,7 @@ func run(argVersion string, flyRepoGit, git gitInterface, fs fsInterface) int {
 	mkDirIfNotExist(filepath.Join(flyRepoGit.getRepoDir(), "src"))
 	mkDirIfNotExist(dir)
 
-	if !createBuild(markFiles(fileNames), dir, pArgs.version, fs) {
+	if !createBuild(markFiles(files), dir, pArgs.version, fs) {
 		fmt.Println(" > files for build not found. aborted.")
 		fmt.Println("=> the end.")
 		return 1

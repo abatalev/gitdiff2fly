@@ -55,7 +55,7 @@ func (io RealIO) WriteFile(filename string, data []byte, perm fs.FileMode) error
 type gitInterface interface {
 	getCurrentVersion() string
 	getLastRelease(fileName string) (string, bool)
-	diff(last, curr string, inc bool) []string
+	diff(last, curr string, inc bool) []GitFileInfo
 	isAncestor(last, curr string) bool
 	makeRelease(verPath, version, curr string)
 	getRepoDir() string
@@ -113,17 +113,41 @@ func (git Git) getCurrentVersion() string {
 	return curr
 }
 
-func (git Git) diff(last, curr string, inc bool) []string {
-	arr := make([]string, 0)
+type GitFileInfo struct {
+	mode           string
+	fileName       string
+	targetFileName string
+}
+
+func makeGitFileInfo(p []string) GitFileInfo {
+	if len(p) == 2 {
+		return GitFileInfo{mode: p[0], fileName: p[1]}
+	}
+	return GitFileInfo{mode: p[0], fileName: p[1], targetFileName: p[2]}
+}
+
+func makeGitFileInfos(str string) []GitFileInfo {
+	files := make([]GitFileInfo, 0)
+	for _, s := range strings.Split(str, "\n") {
+		if s == "" {
+			continue
+		}
+		files = append(files, makeGitFileInfo(strings.Split(s, "\t")))
+	}
+	return files
+}
+
+func (git Git) diff(last, curr string, inc bool) []GitFileInfo {
+	arr := make([]GitFileInfo, 0)
 	if last == curr && !inc {
 		return arr
 	}
 	if inc {
 		str, _ := git.cmd.command(git.getRepoDir(), "git", "show", "--pretty=format:", "--name-status", last)
-		arr = append(arr, strings.Split(str, "\n")...)
+		arr = append(arr, makeGitFileInfos(str)...)
 	}
 	str, _ := git.cmd.command(git.getRepoDir(), "git", "diff", "--name-status", last+".."+curr)
-	return append(arr, strings.Split(str, "\n")...)
+	return append(arr, makeGitFileInfos(str)...)
 }
 
 func (git Git) makeRelease(verPath, version, curr string) {
