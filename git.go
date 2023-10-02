@@ -74,9 +74,9 @@ func (git Git) getRepoDir() string {
 	return "."
 }
 
-func (git Git) doGit(dir string, args ...string) {
+func (git Git) doGit(args ...string) {
 	fmt.Println(" > execute", "git", args)
-	s, err := git.cmd.command(dir, "git", args...)
+	s, err := git.cmd.command(git.path, "git", args...)
 	if err != nil {
 		fmt.Println("FATAL", args, "???", s, "???")
 		panic(err)
@@ -133,10 +133,10 @@ func (git Git) makeRelease(verPath, version, curr string) {
 	if err != nil {
 		panic(err)
 	}
-	git.doGit(git.getRepoDir(), "add", filepath.Join("src", verPath))
-	git.doGit(git.getRepoDir(), "add", "last_commit")
-	git.doGit(git.getRepoDir(), "commit", "-m", "version "+version)
-	git.doGit(git.getRepoDir(), "tag", "changeset_"+curr)
-	git.doGit(git.getRepoDir(), "tag", "v"+version)
-	git.doGit(git.getRepoDir(), "push", "--tags", "origin", "master")
+	git.doGit("add", filepath.Join("src", verPath))
+	git.doGit("add", "last_commit")
+	git.doGit("commit", "-m", "version "+version)
+	git.doGit("tag", "changeset_"+curr)
+	git.doGit("tag", "v"+version)
+	git.doGit("push", "--tags", "origin", "master")
 }
