@@ -119,8 +119,10 @@ type GitFileInfo struct {
 	targetFileName string
 }
 
+const DIFFLINECOUNT = 2
+
 func makeGitFileInfo(p []string) GitFileInfo {
-	if len(p) == 2 {
+	if len(p) == DIFFLINECOUNT {
 		return GitFileInfo{mode: p[0], fileName: p[1]}
 	}
 	return GitFileInfo{mode: p[0], fileName: p[1], targetFileName: p[2]}
